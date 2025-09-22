@@ -20,7 +20,7 @@ defmodule Cleanalign.MixProject do
   def application do
     [
       mod: {Cleanalign.Application, []},
-      extra_applications: [:logger, :runtime_tools, :ash_postgres, :ash]
+      extra_applications: [:logger, :runtime_tools, :ash_postgres, :ash, :ash_authentication]
     ]
   end
 
@@ -40,6 +40,7 @@ defmodule Cleanalign.MixProject do
   defp deps do
     [
       {:phoenix, "~> 1.8.0"},
+      {:phoenix_live_dashboard, "~> 0.8"},
       {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
       {:heroicons,
@@ -59,11 +60,13 @@ defmodule Cleanalign.MixProject do
       {:ash, "~> 3.0"},
       {:ash_postgres, "~> 2.0"},
       {:ash_authentication, "~> 4.0"},
-      {:ash_rbac, "~> 0.6"},
-      {:backpex, "~> 0.5"},
+      {:ash_authentication_phoenix, "~> 2.0"},
+      {:backpex, "~> 0.15.3"},
       {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
-      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:exical, "~> 0.1.0"},
+      {:timex, "~> 3.7"}
     ]
   end
 

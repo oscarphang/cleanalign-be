@@ -2,7 +2,8 @@ defmodule Cleanalign.Accounts.User do
   use Ash.Resource,
     domain: Cleanalign.Accounts,
     data_layer: AshPostgres.DataLayer,
-    extensions: [AshAuthentication]
+    extensions: [AshAuthentication],
+    authorizers: []
 
   postgres do
     table("users")

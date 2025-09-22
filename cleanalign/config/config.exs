@@ -11,7 +11,7 @@ config :cleanalign,
   ecto_repos: [Cleanalign.Repo],
   generators: [timestamp_type: :utc_datetime]
 
-config :cleanalign, ash_domains: [Cleanalign.Accounts]
+config :cleanalign, ash_domains: [Cleanalign.Accounts, Cleanalign.ServiceCompanies, Cleanalign.Properties, Cleanalign.Schedules]
 
 # Configures the endpoint
 config :cleanalign, CleanalignWeb.Endpoint,

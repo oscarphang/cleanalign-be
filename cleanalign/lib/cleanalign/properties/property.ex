@@ -1,11 +1,12 @@
 defmodule Cleanalign.Properties.Property do
   use Ash.Resource,
     domain: Cleanalign.Properties,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    authorizers: []
 
   postgres do
-    table("properties")
-    repo(Cleanalign.Repo)
+    table "properties"
+    repo Cleanalign.Repo
   end
 
   attributes do
