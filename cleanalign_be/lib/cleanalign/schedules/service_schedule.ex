@@ -26,25 +26,11 @@ defmodule Cleanalign.Schedules.ServiceSchedule do
   calculations do
     calculate :cutoff_day, :integer, expr(property.service_company.cutoff_day)
     calculate :calendar_url, :string, expr(property.calendar_url)
+
+    calculate :in_reporting_period?, :boolean, Cleanalign.Schedules.ServiceSchedule
   end
 
   validations do
-    validate fn changeset, _context ->
-      service_at = Ash.Changeset.get_field(changeset, :service_at)
-      cutoff_day = Ash.Changeset.get_field(changeset, :cutoff_day)
-      today = Date.utc_today()
-
-      if service_at && cutoff_day && Date.after?(service_at |> NaiveDateTime.to_date(), today |> Date.end_of_month()) do
-        if Date.day(today) >= cutoff_day do
-          {:error, "Scheduling for the next month is not allowed after the cutoff day."}
-        else
-          :ok
-        end
-      else
-        :ok
-      end
-    end
-
     validate fn changeset, _context ->
       calendar_url = Ash.Changeset.get_field(changeset, :calendar_url)
       service_at = Ash.Changeset.get_field(changeset, :service_at)
@@ -101,5 +87,28 @@ defmodule Cleanalign.Schedules.ServiceSchedule do
     policy action_type(:read) do
       authorize_if expr(is_service_company(actor()) and actor().id == record.property.service_company_id)
     end
+  end
+
+  def calculate(records, _opts, context) do
+    today = context[:today] || Date.utc_today()
+
+    Enum.map(records, fn record ->
+      cutoff_day = record.property.service_company.cutoff_day
+      service_at_date = DateTime.to_date(record.service_at)
+
+      start_of_this_month = Date.beginning_of_month(today)
+      start_of_last_month = Timex.shift(start_of_this_month, months: -1)
+
+      reporting_start_date =
+        if today.day >= cutoff_day do
+          %Date{year: start_of_this_month.year, month: start_of_this_month.month, day: cutoff_day}
+        else
+          %Date{year: start_of_last_month.year, month: start_of_last_month.month, day: cutoff_day}
+        end
+
+      reporting_end_date = Timex.shift(reporting_start_date, months: 1)
+
+      Date.compare(service_at_date, reporting_start_date) != :lt && Date.compare(service_at_date, reporting_end_date) == :lt
+    end)
   end
 end

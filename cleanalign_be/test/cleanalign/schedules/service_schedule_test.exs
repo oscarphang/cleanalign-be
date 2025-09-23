@@ -10,24 +10,23 @@ defmodule Cleanalign.Schedules.ServiceScheduleTest do
     {:ok, user} =
       Ash.Changeset.for_create(User, :register_with_password, %{
         email: "test@example.com",
-        password: "password"
+        password: "password",
+        password_confirmation: "password"
       })
       |> Ash.create()
-
-    Ash.set_context(%{actor: user})
 
     {:ok, %{user: user}}
   end
 
-  describe "cutoff day validation" do
-    test "prevents scheduling after the cutoff day", %{user: user} do
+  describe "in_reporting_period? calculation" do
+    test "returns true for dates within the reporting period", %{user: user} do
       {:ok, service_company} =
         Ash.Changeset.for_create(ServiceCompany, :create, %{
           name: "Test Company",
           cutoff_day: 15,
           user_id: user.id
         })
-        |> Ash.create()
+        |> Ash.create(actor: user)
 
       {:ok, property} =
         Ash.Changeset.for_create(Property, :create, %{
@@ -36,38 +35,28 @@ defmodule Cleanalign.Schedules.ServiceScheduleTest do
           user_id: user.id,
           max_pax: 1
         })
-        |> Ash.create()
+        |> Ash.create(actor: user)
 
-      # Simulate being after the cutoff day (e.g., Jan 16th)
-      Timex.travel(Date.from_iso8601!("2024-01-16"), fn ->
-        attrs = %{
+      {:ok, schedule} =
+        Ash.Changeset.for_create(ServiceSchedule, :create, %{
           property_id: property.id,
-          service_at: "2024-02-10T10:00:00Z", # Scheduling for the next month
+          service_at: ~U[2024-01-20 10:00:00Z],
           pax: 1
-        }
+        })
+        |> Ash.create(actor: user)
 
-        changeset = Ash.Changeset.for_create(ServiceSchedule, :create, attrs)
-
-        {:error, result} = Ash.create(changeset)
-
-        assert %Ash.Error.Invalid{
-                 errors: [
-                   %Ash.Error.Changes.InvalidAttribute{
-                     message: "You can only schedule for the current month after the 15th."
-                   }
-                 ]
-               } = result
-      end)
+      # Today is Jan 16th, so reporting period is Jan 15th to Feb 15th
+      assert Ash.load!(schedule, :in_reporting_period?, context: %{today: ~D[2024-01-16]}).in_reporting_period?
     end
 
-    test "allows scheduling before the cutoff day", %{user: user} do
+    test "returns false for dates outside the reporting period", %{user: user} do
       {:ok, service_company} =
         Ash.Changeset.for_create(ServiceCompany, :create, %{
           name: "Test Company",
           cutoff_day: 15,
           user_id: user.id
         })
-        |> Ash.create()
+        |> Ash.create(actor: user)
 
       {:ok, property} =
         Ash.Changeset.for_create(Property, :create, %{
@@ -76,20 +65,18 @@ defmodule Cleanalign.Schedules.ServiceScheduleTest do
           user_id: user.id,
           max_pax: 1
         })
-        |> Ash.create()
+        |> Ash.create(actor: user)
 
-      # Simulate being before the cutoff day (e.g., Jan 14th)
-      Timex.travel(Date.from_iso8601!("2024-01-14"), fn ->
-        attrs = %{
+      {:ok, schedule} =
+        Ash.Changeset.for_create(ServiceSchedule, :create, %{
           property_id: property.id,
-          service_at: "2024-02-10T10:00:00Z", # Scheduling for the next month
+          service_at: ~U[2024-02-20 10:00:00Z],
           pax: 1
-        }
+        })
+        |> Ash.create(actor: user)
 
-        changeset = Ash.Changeset.for_create(ServiceSchedule, :create, attrs)
-
-        assert {:ok, _} = Ash.create(changeset)
-      end)
+      # Today is Jan 16th, so reporting period is Jan 15th to Feb 15th
+      refute Ash.load!(schedule, :in_reporting_period?, context: %{today: ~D[2024-01-16]}).in_reporting_period?
     end
   end
 end
