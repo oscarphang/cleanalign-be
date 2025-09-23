@@ -8,13 +8,13 @@ defmodule Cleanalign.Schedules.ServiceScheduleTest do
 
   setup do
     {:ok, user} =
-      Ash.Changeset.for_create(User, :register, %{
+      Ash.Changeset.for_create(User, :register_with_password, %{
         email: "test@example.com",
         password: "password"
       })
       |> Ash.create()
 
-    Ash.set_actor(user)
+    Ash.set_context(%{actor: user})
 
     {:ok, %{user: user}}
   end
@@ -39,11 +39,11 @@ defmodule Cleanalign.Schedules.ServiceScheduleTest do
         |> Ash.create()
 
       # Simulate being after the cutoff day (e.g., Jan 16th)
-      Timex.with_date(Date.from_iso8601!("2024-01-16"), fn ->
+      Timex.travel(Date.from_iso8601!("2024-01-16"), fn ->
         attrs = %{
           property_id: property.id,
-          user_id: user.id,
-          scheduled_date: "2024-02-10" # Scheduling for the next month
+          service_at: "2024-02-10T10:00:00Z", # Scheduling for the next month
+          pax: 1
         }
 
         changeset = Ash.Changeset.for_create(ServiceSchedule, :create, attrs)
@@ -79,11 +79,11 @@ defmodule Cleanalign.Schedules.ServiceScheduleTest do
         |> Ash.create()
 
       # Simulate being before the cutoff day (e.g., Jan 14th)
-      Timex.with_date(Date.from_iso8601!("2024-01-14"), fn ->
+      Timex.travel(Date.from_iso8601!("2024-01-14"), fn ->
         attrs = %{
           property_id: property.id,
-          user_id: user.id,
-          scheduled_date: "2024-02-10" # Scheduling for the next month
+          service_at: "2024-02-10T10:00:00Z", # Scheduling for the next month
+          pax: 1
         }
 
         changeset = Ash.Changeset.for_create(ServiceSchedule, :create, attrs)

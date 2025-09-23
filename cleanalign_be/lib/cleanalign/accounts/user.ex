@@ -3,7 +3,7 @@ defmodule Cleanalign.Accounts.User do
     domain: Cleanalign.Accounts,
     data_layer: AshPostgres.DataLayer,
     extensions: [AshAuthentication],
-    authorizers: []
+    authorizers: [Ash.Policy.Authorizer]
 
   postgres do
     table("users")
@@ -41,5 +41,29 @@ defmodule Cleanalign.Accounts.User do
 
   identities do
     identity(:unique_email, [:email])
+  end
+
+  policies do
+    require Cleanalign.RBAC
+
+    policy action_type(:create) do
+      authorize_if expr(is_admin(actor()))
+    end
+
+    policy action_type(:update) do
+      authorize_if expr(is_admin(actor()))
+    end
+
+    policy action_type(:destroy) do
+      authorize_if expr(is_admin(actor()))
+    end
+
+    policy action_type(:read) do
+      authorize_if expr(actor().id == record.id)
+    end
+
+    policy action(:update) do
+      authorize_if expr(actor().id == record.id)
+    end
   end
 end

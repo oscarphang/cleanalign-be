@@ -66,7 +66,8 @@ defmodule Cleanalign.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:exical, "~> 0.1.0"},
-      {:timex, "~> 3.7"}
+      {:timex, "~> 3.7"},
+      {:picosat_elixir, "~> 0.2.3"}
     ]
   end
 

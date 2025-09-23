@@ -2,7 +2,7 @@ defmodule Cleanalign.Properties.Property do
   use Ash.Resource,
     domain: Cleanalign.Properties,
     data_layer: AshPostgres.DataLayer,
-    authorizers: []
+    authorizers: [Ash.Policy.Authorizer]
 
   postgres do
     table "properties"
@@ -29,5 +29,29 @@ defmodule Cleanalign.Properties.Property do
       # Can be unassigned initially
       allow_nil?: true
     )
+  end
+
+  policies do
+    require Cleanalign.RBAC
+
+    policy action_type(:create) do
+      authorize_if expr(is_admin(actor()) or is_property_manager(actor()))
+    end
+
+    policy action_type(:read) do
+      authorize_if expr(is_admin(actor()) or is_property_manager(actor()) or is_service_company(actor()))
+    end
+
+    policy action_type(:update) do
+      authorize_if expr(is_admin(actor()) or (is_property_manager(actor()) and actor().id == record.user_id))
+    end
+
+    policy action_type(:destroy) do
+      authorize_if expr(is_admin(actor()) or (is_property_manager(actor()) and actor().id == record.user_id))
+    end
+
+    policy action_type(:read) do
+      authorize_if expr(is_service_company(actor()) and actor().id == record.service_company_id)
+    end
   end
 end

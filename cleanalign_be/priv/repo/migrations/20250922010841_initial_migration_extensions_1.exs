@@ -139,6 +139,7 @@ defmodule Cleanalign.Repo.Migrations.InitialMigrationExtensions1 do
     IMMUTABLE PARALLEL SAFE STRICT;
     """)
 
+    execute("CREATE EXTENSION IF NOT EXISTS \"citext\"")
     execute("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
   end
 
