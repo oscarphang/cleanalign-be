@@ -32,26 +32,22 @@ defmodule Cleanalign.Properties.Property do
   end
 
   policies do
-    require Cleanalign.RBAC
+    import Ash.Policy.Authorizer
 
     policy action_type(:create) do
-      authorize_if expr(is_admin(actor()) or is_property_manager(actor()))
+      authorize_if check(&Cleanalign.RBAC.is_admin/2) or check(&Cleanalign.RBAC.is_property_manager/2)
     end
 
     policy action_type(:read) do
-      authorize_if expr(is_admin(actor()) or is_property_manager(actor()) or is_service_company(actor()))
+      authorize_if check(&Cleanalign.RBAC.is_admin/2) or check(&Cleanalign.RBAC.is_property_manager/2) or check(&Cleanalign.RBAC.is_service_company/2)
     end
 
     policy action_type(:update) do
-      authorize_if expr(is_admin(actor()) or (is_property_manager(actor()) and actor().id == record.user_id))
+      authorize_if check(&Cleanalign.RBAC.is_admin/2) or (check(&Cleanalign.RBAC.is_property_manager/2) and check(fn actor, record -> actor.id == record.user_id end))
     end
 
     policy action_type(:destroy) do
-      authorize_if expr(is_admin(actor()) or (is_property_manager(actor()) and actor().id == record.user_id))
-    end
-
-    policy action_type(:read) do
-      authorize_if expr(is_service_company(actor()) and actor().id == record.service_company_id)
+      authorize_if check(&Cleanalign.RBAC.is_admin/2) or (check(&Cleanalign.RBAC.is_property_manager/2) and check(fn actor, record -> actor.id == record.user_id end))
     end
   end
 end

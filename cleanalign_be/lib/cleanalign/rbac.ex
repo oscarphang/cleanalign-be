@@ -1,19 +1,13 @@
 defmodule Cleanalign.RBAC do
-  defmacro is_admin(actor) do
-    quote do
-      unquote(actor).roles.name == :superuser
-    end
+  def is_admin(actor, _) do
+    Enum.any?(actor.roles, fn role -> role.name == :superuser end)
   end
 
-  defmacro is_property_manager(actor) do
-    quote do
-      unquote(actor).roles.name == :property_manager
-    end
+  def is_property_manager(actor, _) do
+    Enum.any?(actor.roles, fn role -> role.name == :property_manager end)
   end
 
-  defmacro is_service_company(actor) do
-    quote do
-      unquote(actor).roles.name == :service_company
-    end
+  def is_service_company(actor, _) do
+    Enum.any?(actor.roles, fn role -> role.name == :service_company end)
   end
 end

@@ -27,22 +27,10 @@ defmodule Cleanalign.Accounts.Role do
   end
 
   policies do
-    require Cleanalign.RBAC
+    import Ash.Policy.Authorizer
 
-    policy action_type(:create) do
-      authorize_if expr(is_admin(actor()))
-    end
-
-    policy action_type(:read) do
-      authorize_if expr(is_admin(actor()))
-    end
-
-    policy action_type(:update) do
-      authorize_if expr(is_admin(actor()))
-    end
-
-    policy action_type(:destroy) do
-      authorize_if expr(is_admin(actor()))
+    policy action_type(:manage) do
+      authorize_if check(&Cleanalign.RBAC.is_admin/2)
     end
   end
 end
