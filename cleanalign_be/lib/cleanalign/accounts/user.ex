@@ -44,26 +44,27 @@ defmodule Cleanalign.Accounts.User do
   end
 
   policies do
-    import Ash.Policy.Authorizer
+    import Cleanalign.RBAC
+    import Ash.Policy.Check.Builtins
 
     policy action_type(:create) do
-      authorize_if check(&Cleanalign.RBAC.is_admin/2)
+      authorize_if is_admin()
     end
 
     policy action_type(:update) do
-      authorize_if check(&Cleanalign.RBAC.is_admin/2)
+      authorize_if is_admin()
     end
 
     policy action_type(:destroy) do
-      authorize_if check(&Cleanalign.RBAC.is_admin/2)
+      authorize_if is_admin()
     end
 
     policy action_type(:read) do
-      authorize_if check(fn actor, record -> actor.id == record.id end)
+      authorize_if {Ash.Policy.Check.AttributeEquals, attribute: :id, value: :id}
     end
 
     policy action(:update) do
-      authorize_if check(fn actor, record -> actor.id == record.id end)
+      authorize_if {Ash.Policy.Check.AttributeEquals, attribute: :id, value: :id}
     end
   end
 end
